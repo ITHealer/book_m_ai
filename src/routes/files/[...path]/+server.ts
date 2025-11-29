@@ -36,7 +36,11 @@ export const GET: RequestHandler = async ({ params }) => {
 			}
 		});
 	} catch (err) {
-		console.error('Error reading file:', err);
+		// Suppress 404 error logs (expected when icons/images don't exist)
+		// Only log unexpected errors
+		if (err && typeof err === 'object' && 'status' in err && err.status !== 404) {
+			console.error('Error reading file:', err);
+		}
 		throw error(404, 'File not found');
 	}
 };
