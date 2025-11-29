@@ -53,12 +53,12 @@ $: {
 
 <div class="flex min-h-screen flex-col">
 	<head>
-		<title>Grimoire</title>
+		<title>Healer</title>
 	</head>
 	<div class="min-w-screen flex flex-1 flex-col">
 		<div class="z-1 navbar">
 			<div class="flex">
-				<a href="/" class="btn btn-ghost text-xl normal-case">grimoire</a>
+				<a href="/" class="btn btn-ghost text-xl normal-case">healer</a>
 			</div>
 			<div class="navbar-center flex-1">
 				<div class="form-control join join-horizontal mx-auto flex w-10/12">

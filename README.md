@@ -1,186 +1,255 @@
-<div align="center">
-  <img alt="Grimoire Logo" src="static/grimoire_logo_300.webp">
-  <h1>Grimoire</h1>
-  <p>Bookmark manager for the wizards 🧙</p>
-<img alt="GitHub License" src="https://img.shields.io/github/license/goniszewski/grimoire">
-<img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/goniszewski/grimoire/ci.yml?event=release">
-<img alt="GitHub Release" src="https://img.shields.io/github/v/release/goniszewski/grimoire">
-<img alt="Docker Pulls" src="https://img.shields.io/docker/pulls/goniszewski/grimoire">
-</div>
-<br>
+# Healer 🔮⚕️
 
-> [!IMPORTANT]
-> Version `0.4` introduces a new approach for data storage and user authorization. If you are upgrading from version `0.3.X` you may want to utilize the built-in [**migration tool** (read more)](https://grimoire.pro/docs/migration-tool/).
+> **Intelligent bookmark manager powered by AI**
 
-Glimpse into the magical book of _your_ forbidden knowledge - **Grimoire!** 📖💫
+Healer is an AI-enhanced fork of [Grimoire](https://github.com/goniszewski/grimoire), designed to heal your information overload with intelligent features.
 
-Unleash your inner sorcerer and conquer the chaos of bookmarks! With Grimoire, you'll have a bewitching way to store and sort your enchanted links.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-But wait, there's **more**!
+---
 
-Transmute your saved pages into juicy content snippets with our mystical extraction feature. Embrace the magic, tame the clutter, and let Grimoire be your mystical companion in the vast library of the web.
+## ✨ What is Healer?
 
-It's time to conjure up some organization! 📚✨
+Healer helps you **organize, rediscover, and understand** your bookmarks using AI-powered insights:
 
-## Features
+- 🔖 **Smart Organization** - Categories, tags, and fuzzy search
+- 🤖 **AI-Powered** - Auto-generate summaries and tags
+- 🌐 **Metadata Extraction** - Automatic content and thumbnail fetching
+- 📝 **Personal Notes** - Add your thoughts to any bookmark
+- 🔍 **Powerful Search** - Find anything instantly with fuzzy matching
+- 🌙 **Dark Mode** - Easy on the eyes, day or night
+- 👥 **Multi-User** - Each user has their own private bookmarks
+- 🔌 **API Integration** - Add bookmarks from external sources
 
-- add and organize bookmarks easily 🔖
-- create new user accounts, each with their own bookmarks, categories and tags 🙋
-- fuzzy search through bookmarks 🔍
-- supports tags and categories 🏷️
-- fetch metadata from websites, store it locally and update it when needed 🌐
-- add your personal notes to bookmarks 📝
-- integration API to add bookmarks from other sources 🧰
-- embrace the night with a dark mode 🌙
-- and stay productive using our official browser extension, _grimoire companion_ ([available here](https://github.com/goniszewski/grimoire-web-extension)) 🪄
+---
 
-## Screenshots
+## 🚀 Quick Start
 
-| Light Mode                                                                      | Dark Mode                                                                            |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| ![Only unread](screenshots/only-unread-white.png) Show only unread              | ![Adding new bookmark](screenshots/adding-new-bookmark-dark.png) Adding new bookmark |
-| ![User Profile view](screenshots/user-profile-view-white.png) User Profile view | ![Bookmark details](screenshots/bookmark-details-dark.png) Bookmark details          |
+### Docker Compose (Recommended)
 
-More screenshots can be found in the [screenshots directory](screenshots).
-
-## Installation
-
-<details>
-  <summary><strong>Run using Docker Compose</strong> (recommended)</summary>
-
-### Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-
-### Steps
-
-1. Create a `docker-compose.yml` file with the following content:
+1. Create a `docker-compose.yml`:
 
 ```yml
 services:
-  grimoire:
-    image: goniszewski/grimoire:latest # or change from 'latest' to 'preview' to use the latest preview version
-    container_name: grimoire
+  healer:
+    image: healer:latest
+    container_name: healer
     restart: unless-stopped
     environment:
       - PORT=5173
       - PUBLIC_HTTPS_ONLY=false
       - PUBLIC_SIGNUP_DISABLED=false
+      # AI Service (optional)
+      # - HEALER_AI_BASE_URL=http://localhost:8000
+      # - HEALER_AI_API_KEY=your-secret-key
     volumes:
-      - grimoire_data:/app/data/
-    build:
-      context: .
-      dockerfile: Dockerfile
-    healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:$PORT/api/health || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - healer_data:/app/data/
     ports:
-      - '${PORT:-5173}:${PORT:-5173}'
+      - '5173:5173'
+
 volumes:
-  grimoire_data:
+  healer_data:
 ```
 
-2. [Optional] Update the environment variables to match your needs.
-3. Run the app using `docker compose up -d` command.
+2. Run: `docker compose up -d`
+3. Open: `http://localhost:5173`
 
-</details>
+---
 
-> [!NOTE]
-> For the recommended setup, only the `docker-compose.yml` file is required.
+## 🤖 AI Features
+
+Healer uses a **separate AI service** (FastAPI) for intelligent features:
+
+- **Auto-generate tags** from bookmark content
+- **Summarize** webpages automatically
+- **Suggest** related bookmarks (coming soon)
+
+### AI Service Configuration
+
+Configure via environment variables:
+
+```bash
+# AI Service URL (defaults to mock mode if not set)
+HEALER_AI_BASE_URL=http://localhost:8000
+
+# API Key for authentication (if required)
+HEALER_AI_API_KEY=your-secret-key-here
+
+# Use mock responses for testing (default: auto-detect)
+HEALER_AI_USE_MOCK=false
+
+# Enable debug logging
+HEALER_AI_DEBUG=true
+```
+
+**Note:** When `HEALER_AI_BASE_URL` is not configured, Healer uses mock AI responses for development/testing.
+
+---
+
+## 📦 Installation Options
 
 <details>
-  <summary><strong>Run app using Node</strong></summary>
+  <summary><strong>Development Setup (Node/Bun)</strong></summary>
 
 ### Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- [Node.js](https://nodejs.org/en/download/)
-- [PNPM](https://pnpm.io/installation)
+- [Bun](https://bun.sh) or [Node.js](https://nodejs.org)
+- [PNPM](https://pnpm.io) (if using Node)
 
 ### Steps
 
 ```bash
 # Clone the repository
-git clone https://github.com/goniszewski/grimoire
+git clone https://github.com/ITHealer/book_m_ai
+cd book_m_ai
 
-# Rename the `.env.example` file to `.env`
-# "mv .env.example .env" on Linux/MacOS, "ren .env.example .env" on Windows
+# Copy environment template
+cp .env.example .env
 
-# Install the dependencies
-pnpm i
+# Install dependencies
+bun install  # or: pnpm install
 
-# Run the app
-chmod +x ./run-dev.sh && ./run-dev.sh
+# Run development server
+bun run dev  # or: pnpm dev
+```
+
+Access at `http://localhost:5173`
+
+</details>
+
+<details>
+  <summary><strong>Build Docker Image</strong></summary>
+
+```bash
+# Build the image
+chmod +x build.sh && ./build.sh
+
+# Or manually:
+docker build -t healer:latest .
 ```
 
 </details>
 
-> [!TIP]
-> Although the above setups are intended for development, they are also suitable for daily use. For a better experience, it is recommended to use a Node.js process manager, such as [PM2](https://github.com/Unitech/pm2).
+---
 
-<details>
-  <summary><strong>Run using One-Click Deploy and Kubernetes (Helm)</strong></summary>
+## 🎯 Features in Detail
 
-### ⚡ One-Click Deploy
+### Core Features
+- ✅ Add and organize bookmarks with categories
+- ✅ Multi-user support with private bookmark collections
+- ✅ Fuzzy search across titles, descriptions, and tags
+- ✅ Tag management and filtering
+- ✅ Automatic metadata fetching (title, description, images)
+- ✅ Personal notes for each bookmark
+- ✅ Importance ratings and flags
+- ✅ Dark/light theme switching
+- ✅ Import bookmarks from browsers (Netscape format)
+- ✅ RESTful API for integrations
 
-| Cloud Provider | Deploy Button |
-|----------------|---------------|
-| AWS | <a href="https://deploystack.io/deploy/goniszewski-grimoire?provider=aws&language=cfn"><img src="https://raw.githubusercontent.com/deploystackio/deploy-templates/refs/heads/main/.assets/img/aws.svg" height="38"></a> |
-| DigitalOcean | <a href="https://deploystack.io/deploy/goniszewski-grimoire?provider=do&language=dop"><img src="https://raw.githubusercontent.com/deploystackio/deploy-templates/refs/heads/main/.assets/img/do.svg" height="38"></a> |
-| Render | <a href="https://deploystack.io/deploy/goniszewski-grimoire?provider=rnd&language=rnd"><img src="https://raw.githubusercontent.com/deploystackio/deploy-templates/refs/heads/main/.assets/img/rnd.svg" height="38"></a> |
-| Helm | `helm repo add deploystack https://deploystackio.github.io/deploy-templates/`<br>`helm repo update`<br>`helm install goniszewski-grimoire deploystack/goniszewski-grimoire` |
+### AI Features
+- ✅ Auto-generate tags from content
+- ✅ Summarize webpage content
+- 🔜 Smart bookmark recommendations
+- 🔜 Duplicate detection
+- 🔜 Content categorization
 
-<sub>Change or add deploy options at [awesome-docker-run](https://github.com/deploystackio/awesome-docker-run/tree/main/commands/grimoire)</sub>
+### Coming Soon
+- 📤 Export bookmarks (JSON, HTML, CSV)
+- 🌍 Public bookmark sharing
+- ✨ Flows - session-based bookmark collections
+- 🔗 Link preview cards
+- 📱 Mobile app companion
 
-<sub>Generated by <a href="https://deploystack.io/c/goniszewski-grimoire" target="_blank">DeployStack.io</a></sub>
+---
 
-</details>
+## 🛠 Environment Variables
 
-## Development
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PUBLIC_ORIGIN` | Your domain/URL | `http://localhost:5173` |
+| `PUBLIC_HTTPS_ONLY` | Force HTTPS | `false` |
+| `PORT` | Server port | `5173` |
+| `PUBLIC_SIGNUP_DISABLED` | Disable public registration | `false` |
+| `HEALER_AI_BASE_URL` | AI service endpoint | `http://localhost:8000` |
+| `HEALER_AI_API_KEY` | AI service API key | - |
+| `HEALER_AI_USE_MOCK` | Use mock AI responses | auto-detect |
 
-Check out the [development guide](https://grimoire.pro/docs/getting-started/development) to learn how to set up the project for development.
+---
 
-## Roadmap
+## 📖 API Documentation
 
-- [x] Initial relase (0.1.0) 🚀
-- [x] Official Docker image 🐳
-- [x] Add Integration API 🧰
-- [x] Official browser extension ([repository](https://github.com/goniszewski/grimoire-web-extension)) 🪄
-- [ ] Bookmark import and export features 💼
-- [ ] AI features, like generated descriptions and tags suggestions 🤖
-- [ ] Public User profiles & bookmark sharing 🌍
-- [ ] Flows - a way to keep bookmarks in a session-like order with related notes (e.g. for learning, research, etc.) ✨
-- [ ] ...and more to come! 🧙
+Healer provides a REST API for programmatic access:
 
-We're open to suggestions and feature requests! If you have an idea for a feature, please [open an issue](https://github.com/goniszewski/grimoire/issues) or [start a discussion](https://github.com/goniszewski/grimoire/discussions/categories/ideas).
+- **Swagger UI**: `http://localhost:5173/api`
+- **OpenAPI Spec**: `/api/api-schema.json`
 
-## Contributing
+### Example: Add a Bookmark
 
-If you want to contribute to the project, please read the [contributing guide](CONTRIBUTING.md).
+```bash
+curl -X POST http://localhost:5173/api/bookmarks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com",
+    "title": "Example Site",
+    "categoryId": 1
+  }'
+```
 
-## License
+---
 
-This project is licensed under the [MIT License](LICENSE).
+## 🙏 Credits & Attribution
 
-## Credits
+**Healer** is a fork of [Grimoire](https://github.com/goniszewski/grimoire) by [Robert Goniszewski](https://github.com/goniszewski), licensed under MIT.
 
-Special thanks to: [@extractus/article-extractor](https://github.com/extractus/article-extractor),
-[Bun](https://github.com/oven-sh/bun),
-[DaisyUI](https://github.com/saadeghi/daisyui),
-[Drizzle](https://github.com/drizzle-team/drizzle-orm),
-[Fuse.js](https://github.com/krisk/fuse),
-[Lucia](https://github.com/pilcrowOnPaper/lucia),
-[MetaScraper](https://github.com/microlinkhq/metascraper),
-[PocketBase](https://github.com/pocketbase/pocketbase),
-[sanitize-html](https://github.com/apostrophecms/sanitize-html),
-[SvelteKit](https://github.com/sveltejs/kit),
-[Svelte Select](https://github.com/rob-balfre/svelte-select),
-[Svelte French Toast](https://github.com/kbrgl/svelte-french-toast),
-[Swagger UI](https://github.com/swagger-api/swagger-ui),
-[Tabler Icons](https://github.com/tabler/tabler-icons),
-[Tailwind CSS](https://tailwindcss.com),
-[url-metadata](https://github.com/laurengarcia/url-metadata)
+We've added:
+- AI-powered features with separate service architecture
+- Simplified configuration
+- Enhanced user experience
+
+Original Grimoire contributors and maintainers deserve massive credit for building a solid foundation.
+
+### Built With Amazing Open Source
+
+- [SvelteKit](https://kit.svelte.dev) - Web framework
+- [TailwindCSS](https://tailwindcss.com) + [DaisyUI](https://daisyui.com) - UI styling
+- [Drizzle ORM](https://orm.drizzle.team) - Database
+- [Lucia](https://lucia-auth.com) - Authentication
+- [Fuse.js](https://fusejs.io) - Fuzzy search
+- [@extractus/article-extractor](https://github.com/extractus/article-extractor) - Content extraction
+- [Bun](https://bun.sh) - JavaScript runtime
+
+...and many more! See [package.json](package.json) for full list.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+**Original Project**: [Grimoire](https://github.com/goniszewski/grimoire) by Robert Goniszewski (MIT License)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Whether it's:
+- 🐛 Bug reports
+- 💡 Feature requests
+- 🔧 Pull requests
+- 📖 Documentation improvements
+
+Please check out our [Contributing Guide](CONTRIBUTING.md) to get started.
+
+---
+
+## 🔗 Links
+
+- **GitHub**: [ITHealer/book_m_ai](https://github.com/ITHealer/book_m_ai)
+- **Original Project**: [goniszewski/grimoire](https://github.com/goniszewski/grimoire)
+- **Issues**: [Report a bug](https://github.com/ITHealer/book_m_ai/issues)
+
+---
+
+<p align="center">
+  Made with ❤️ by the Healer community<br>
+  Forked from Grimoire • MIT License
+</p>

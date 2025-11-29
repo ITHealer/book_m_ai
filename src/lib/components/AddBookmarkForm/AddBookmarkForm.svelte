@@ -2,7 +2,7 @@
 import { enhance } from '$app/forms';
 import { invalidate } from '$app/navigation';
 import { page } from '$app/stores';
-import { generateTags } from '$lib/integrations/ollama';
+import { aiClient } from '$lib/integrations/ai';
 import { searchEngine } from '$lib/stores/search.store';
 import { userSettingsStore } from '$lib/stores/user-settings.store';
 import type { Metadata } from '$lib/types/Metadata.type';
@@ -147,21 +147,21 @@ const onGetMetadata = debounce(
 			.then((data) => {
 				metadata = data?.metadata || { ...defaultFormValues };
 
-				if (!metadata.contentText || !$userSettingsStore?.llm || !$userSettingsStore.llm.enabled)
+				// Auto-generate tags if AI is enabled in user settings
+				if (!metadata.contentText || !$userSettingsStore?.ai?.enabled)
 					return;
 
 				$loadingTags = true;
 
-				const generateTagsPromise = generateTags(
-					metadata.contentText,
-					$userSettingsStore?.llm?.ollama
-				);
+				const generateTagsPromise = aiClient
+					.generateTags({ content: metadata.contentText, count: 3 })
+					.then((response) => response.tags);
 
 				showToast
 					.promise(
 						generateTagsPromise,
 						{
-							loading: 'Generating tags...',
+							loading: 'Generating tags with AI...',
 							success: 'Tags generated!',
 							error: 'Failed to generate tags.'
 						},
@@ -171,11 +171,11 @@ const onGetMetadata = debounce(
 					)
 					.then((tags) => {
 						$loadingTags = false;
-						bookmarkTagsInput.set(tags!.map((t) => ({ value: t, label: t })));
+						bookmarkTagsInput.set(tags.map((t) => ({ value: t, label: t })));
 					})
 					.catch((err) => {
 						$loadingTags = false;
-						console.error(err);
+						console.error('[AI] Tag generation failed:', err);
 					});
 			})
 			.catch((err) => {

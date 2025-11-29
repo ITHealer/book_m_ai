@@ -3,7 +3,7 @@
 	import { invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { defaultUserSettings } from '$lib/config';
-	import { defaultConfig, listAvailableModels } from '$lib/integrations/ollama';
+	import { checkAIHealth } from '$lib/integrations/ai';
 	import type { UserSettings } from '$lib/types/UserSettings.type';
 	import { showToast } from '$lib/utils/show-toast';
 	import { themeChange } from '$lib/utils/theme-change';
@@ -15,9 +15,14 @@
 		...$page.data.user?.settings
 	});
 
-	const llmModels = writable<{ fetched: boolean; models: string[] }>({
-		fetched: false,
-		models: [$page.data.user?.settings.llm.ollama.model ?? '']
+	// Sync legacy llm.enabled to ai.enabled for backward compatibility
+	if ($userSettingsStore.llm?.enabled && !$userSettingsStore.ai) {
+		$userSettingsStore.ai = { enabled: $userSettingsStore.llm.enabled };
+	}
+
+	const aiHealthStatus = writable<{ checked: boolean; healthy: boolean }>({
+		checked: false,
+		healthy: false
 	});
 
 	function resetToDefaults() {
@@ -27,13 +32,20 @@
 		});
 	}
 
-	async function onTestConnection() {
-		const url =
-			document.querySelector<HTMLInputElement>('[name="llmOllamaUrl"]')?.value ||
-			'http://localhost:11434';
-		const models = await listAvailableModels({ url });
-		llmModels.set({ models, fetched: true });
-		showToast.success('Connection successful!');
+	async function onTestAIConnection() {
+		try {
+			const isHealthy = await checkAIHealth();
+			aiHealthStatus.set({ checked: true, healthy: isHealthy });
+			if (isHealthy) {
+				showToast.success('AI service connection successful!');
+			} else {
+				showToast.error('AI service is not responding. Check your configuration.');
+			}
+		} catch (error) {
+			aiHealthStatus.set({ checked: true, healthy: false });
+			showToast.error('Failed to connect to AI service.');
+			console.error('[AI] Health check failed:', error);
+		}
 	}
 
 	let form: HTMLFormElement;
@@ -102,172 +114,62 @@
 
 			<div class="flex flex-col gap-4">
 				<h2 class="text-xl font-bold">AI Features</h2>
-				<div class="flex gap-2 rounded-md border p-4">
-					<table class="table table-xs w-full">
-						<tr>
-							<td><span class="label-text min-w-[8rem]">Enabled</span></td>
-							<td
-								><input
-									type="checkbox"
-									name="llmEnabled"
-									class="checkbox-accent checkbox"
-									checked={$userSettingsStore.llm.enabled}
-									on:change={(e) => {
-										// @ts-ignore
-										$userSettingsStore.llm.enabled = e.target.checked;
-									}}
-								/></td
-							>
-						</tr>
-						<tr>
-							<td>
-								<span class="label-text min-w-[8rem]">Provider</span>
-							</td>
-							<td>
-								<select
-									name="llmProvider"
-									class="select select-bordered w-full max-w-xs"
-									bind:value={$userSettingsStore.llm.provider}
-								>
-									<option value="openai">OpenAI</option>
-									<option value="ollama">Ollama</option>
-								</select>
-							</td>
-						</tr>
-						{#if $userSettingsStore.llm.provider === 'ollama'}
-							<tr>
-								<td>
-									<span class="label-text min-w-[8rem]">Ollama URL</span>
-								</td>
-								<td>
-									<input
-										type="text"
-										name="llmOllamaUrl"
-										class="input input-bordered w-full max-w-xs"
-										class:border-success={$llmModels.fetched}
-										bind:value={$userSettingsStore.llm.ollama.url}
-										placeholder="http://localhost:11434"
-									/>
-									<button
-										class={`btn btn-sm ${$llmModels.fetched ? 'btn-success' : ' btn-warning'}`}
-										on:click={(el) => {
-											onTestConnection();
-											el.preventDefault();
-										}}
-										>Test
-										{#if $llmModels.fetched}
-											<IconPlugConnected class="h-4 w-4" />
-										{:else}
-											<IconPlug class="h-4 w-4" />
-										{/if}
-									</button>
-								</td>
-							</tr>
-							{#if $llmModels.models.length || $page.data.user.settings.llm.ollama.model}
-								<tr>
-									<td>
-										<span class="label-text min-w-[8rem]">Model</span>
-									</td>
-									<td>
-										<select
-											name="llmOllamaModel"
-											class="select select-bordered w-full max-w-xs"
-											value={$page.data.user.settings.llm.ollama.model}
-											placeholder="Select a model you wish to use"
-											on:change={(e) => {
-												// @ts-ignore
-												$userSettingsStore.llm.ollama.model = e.target.value;
-											}}
-										>
-											{#each $llmModels.models as model}
-												<option value={model}>{model}</option>
-											{/each}
-										</select>
-									</td>
-								</tr>
+				<div class="flex flex-col gap-4 rounded-md border p-4">
+					<div class="flex items-center gap-4">
+						<input
+							type="checkbox"
+							name="aiEnabled"
+							class="checkbox-accent checkbox"
+							checked={$userSettingsStore.ai?.enabled}
+							on:change={(e) => {
+								if (!$userSettingsStore.ai) {
+									$userSettingsStore.ai = { enabled: false };
+								}
+								// @ts-ignore
+								$userSettingsStore.ai.enabled = e.target.checked;
+							}}
+						/>
+						<div class="flex flex-1 flex-col">
+							<span class="label-text font-semibold">Enable AI-powered features</span>
+							<span class="text-xs text-base-content/60">
+								Auto-generate tags, summaries, and more using AI
+							</span>
+						</div>
+						<button
+							class={`btn btn-sm ${$aiHealthStatus.healthy ? 'btn-success' : $aiHealthStatus.checked ? 'btn-error' : 'btn-warning'}`}
+							on:click={(el) => {
+								onTestAIConnection();
+								el.preventDefault();
+							}}
+							>Test Connection
+							{#if $aiHealthStatus.checked}
+								{#if $aiHealthStatus.healthy}
+									<IconPlugConnected class="h-4 w-4" />
+								{:else}
+									<IconPlug class="h-4 w-4" />
+								{/if}
+							{:else}
+								<IconPlug class="h-4 w-4" />
 							{/if}
-						{:else if $userSettingsStore.llm.provider === 'openai'}
-							<tr>
-								<td>
-									<span class="label-text">API Key</span>
-								</td>
-								<td>
-									<input
-										type="text"
-										name="llmOpenaiApikey"
-										class="input input-bordered w-full max-w-xs"
-										value={$page.data.user.settings.llm.openai.apiKey}
-										placeholder="Paste it here..."
-										on:change={(e) => {
-											// @ts-ignore
-											$userSettingsStore.llm.openai.apiKey = e.target.value;
-										}}
-									/>
-								</td>
-							</tr>
-						{/if}
-					</table>
-					<table class="table table-xs w-full">
-						{#if $userSettingsStore.llm.provider === 'ollama'}
-							<thead>
-								<tr>
-									<th>Feature</th>
-									<th>Enabled</th>
-									<th>System message</th>
-								</tr>
-							</thead>
-							<tr>
-								<td>Summarize</td>
-								<td>
-									<input
-										type="checkbox"
-										name="llmOllamaSummarizeEnabled"
-										bind:checked={$userSettingsStore.llm.ollama.summarize.enabled}
-										class="checkbox-accent checkbox"
-									/>
-								</td>
-								<td
-									><textarea
-										name="llmOllamaSystemmsg"
-										class="textarea textarea-bordered textarea-sm w-full min-w-[8rem]"
-										value={$page.data.user.settings.llm.ollama.summarize.system}
-										placeholder={defaultConfig.roles.summarize.system}
-										on:change={(e) => {
-											// @ts-ignore
-											$userSettingsStore.llm.ollama.summarize.system = e.target.value;
-										}}
-									/></td
-								>
-							</tr>
-							<tr>
-								<td>Generate tags</td>
-								<td>
-									<input
-										type="checkbox"
-										name="llmOllamaGenerateTagsEnabled"
-										checked={$page.data.user.settings.llm.ollama.generateTags.enabled}
-										class="checkbox-accent checkbox"
-										on:change={(e) => {
-											// @ts-ignore
-											$userSettingsStore.llm.ollama.generateTags.enabled = e.target.checked;
-										}}
-									/>
-								</td>
-								<td
-									><textarea
-										name="llmOllamaSystemmsg"
-										class="textarea textarea-bordered textarea-sm w-full min-w-[8rem]"
-										value={$page.data.user.settings.llm.ollama.generateTags.system}
-										placeholder={defaultConfig.roles.generateTags.system}
-										on:change={(e) => {
-											// @ts-ignore
-											$userSettingsStore.llm.ollama.generateTags.system = e.target.value;
-										}}
-									/></td
-								>
-							</tr>
-						{/if}
-					</table>
+						</button>
+					</div>
+
+					<div class="divider my-0"></div>
+
+					<div class="flex flex-col gap-2">
+						<p class="text-sm text-base-content/70">
+							<strong>AI Service Configuration:</strong> AI features are powered by a separate AI service.
+							Configuration is managed via environment variables on the server:
+						</p>
+						<ul class="list-inside list-disc space-y-1 text-xs text-base-content/60">
+							<li><code class="rounded bg-base-200 px-1">HEALER_AI_BASE_URL</code> - AI service endpoint</li>
+							<li><code class="rounded bg-base-200 px-1">HEALER_AI_API_KEY</code> - Authentication key (if required)</li>
+							<li><code class="rounded bg-base-200 px-1">HEALER_AI_USE_MOCK</code> - Use mock responses for testing</li>
+						</ul>
+						<p class="text-xs text-base-content/60">
+							Contact your administrator to configure these settings.
+						</p>
+					</div>
 				</div>
 			</div>
 			<div class="flex justify-end gap-4">
