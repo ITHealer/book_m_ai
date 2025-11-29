@@ -26,6 +26,10 @@ export const defaultUserSettings: UserSettings = {
 	bookmarksSortedBy: 'created_desc',
 	bookmarksOnlyShowFlagged: false,
 	bookmarksOnlyShowRead: false,
+	ai: {
+		enabled: false
+	},
+	// Legacy LLM settings for backward compatibility
 	llm: {
 		enabled: false,
 		provider: 'ollama',

@@ -1,9 +1,11 @@
 FROM --platform=$BUILDPLATFORM oven/bun:1.2 AS builder
-LABEL maintainer="Grimoire Developers <contact@grimoire.pro>"
-LABEL description="Bookmark manager for the wizards"
-LABEL org.opencontainers.image.source="https://github.com/goniszewski/grimoire"
+# Healer - forked from Grimoire (MIT License)
+# Original project: https://github.com/goniszewski/grimoire
+LABEL maintainer="Healer Developers"
+LABEL description="Intelligent bookmark manager powered by AI"
+LABEL org.opencontainers.image.source="https://github.com/ITHealer/book_m_ai"
 
-RUN mkdir -p /etc/s6-overlay/s6-rc.d/grimoire /etc/s6-overlay/s6-rc.d/user/contents.d && \
+RUN mkdir -p /etc/s6-overlay/s6-rc.d/healer /etc/s6-overlay/s6-rc.d/user/contents.d && \
     mkdir -p /app/data
 
 # Different build strategy based on architecture
@@ -40,7 +42,7 @@ RUN case "${TARGETARCH}" in \
     rm /tmp/s6-overlay-*xz
 
 COPY docker/etc/s6-overlay /etc/s6-overlay/
-RUN chmod +x /etc/s6-overlay/s6-rc.d/grimoire/run
+RUN chmod +x /etc/s6-overlay/s6-rc.d/healer/run
 
 ENV S6_KEEP_ENV=1 \
     S6_SERVICES_GRACETIME=15000 \
@@ -50,8 +52,8 @@ ENV S6_KEEP_ENV=1 \
 
 RUN bun i -g svelte-kit@latest
 
-RUN adduser --disabled-password --gecos '' grimoire
-RUN mkdir -p /app/data && chown -R grimoire:grimoire /app/data && chmod 766 /app/data
+RUN adduser --disabled-password --gecos '' healer
+RUN mkdir -p /app/data && chown -R healer:healer /app/data && chmod 766 /app/data
 WORKDIR /app
 
 FROM builder AS dependencies
@@ -89,7 +91,7 @@ ENV NODE_ENV=production \
     BODY_SIZE_LIMIT=${BODY_SIZE_LIMIT:-5000000}
 
 RUN chmod +x /docker-entrypoint.sh
-USER grimoire
+USER healer
 EXPOSE ${PORT}
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT/api/health || exit 1

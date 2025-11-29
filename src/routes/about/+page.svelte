@@ -21,47 +21,46 @@ import { page } from '$app/stores';
 					></svg>
 				<div class="flex flex-col">
 					<span>
-						Remember, Grimoire is a <strong>work-in-progress</strong> project.
+						Remember, Healer is a <strong>work-in-progress</strong> project.
 					</span>
-					<span>Accidents may happen!</span>
+					<span>Some features are still evolving!</span>
 				</div>
 			</div>
 			<div class="mb-6 mt-8 flex items-center justify-center">
-				<img
-					srcset="grimoire_logo_300.webp 300w,
-					grimoire_logo_600.webp 600w,
-					grimoire_logo.webp 960w"
-					alt="Grimoire logo"
-					class="max-w-[20rem]" />
+				<div class="text-9xl">🔮⚕️</div>
 			</div>
 			<p>
-				Glimpse into the magical book of <em>your</em> forbidden knowledge -
-			</p>
-			<p class="mx-auto my-2">
-				<strong class="font-serif text-3xl"><em>Grimoire!</em></strong> 📖💫
+				<strong class="font-serif text-3xl"><em>Healer</em></strong> 🔮⚕️
 			</p>
 			<p>
-				Unleash your inner sorcerer and conquer the chaos of bookmarks! With Grimoire, you'll have a
-				bewitching way to store and sort your enchanted links.
+				An intelligent bookmark manager powered by AI, designed to heal your information overload.
 			</p>
 			<p>
-				But wait, there's <strong> more</strong>!
+				<strong>Organize effortlessly.</strong> Healer helps you store, categorize, and rediscover your bookmarks with AI-powered insights.
 			</p>
 			<p>
-				Transmute your saved pages into juicy content snippets with our mystical extraction feature.
-				Embrace the magic, tame the clutter, and let Grimoire be your mystical companion in the vast
-				library of the web.
+				Automatically extract content, generate summaries, and suggest tags—all while keeping your data under your control.
 			</p>
-			<p>It's time to conjure up some organization! 📚✨</p>
+			<p>
+				Stop drowning in links. Let Healer restore order to your digital life. 📚✨
+			</p>
+			<div class="mt-6 rounded-lg bg-base-200 p-4">
+				<p class="text-sm text-base-content/70">
+					<strong>Note:</strong> Healer is a fork of
+					<a href="https://github.com/goniszewski/grimoire" class="link">Grimoire</a>
+					by Robert Goniszewski, licensed under MIT.
+					We've added AI-powered features and architectural improvements while respecting the original project.
+				</p>
+			</div>
 		</div>
 		<div class="flex min-w-fit flex-1 flex-col">
 			<div class="flex flex-col items-center justify-center">
-				<h2 class="mb-4 mt-8 text-xl font-bold">Developers and contributors</h2>
+				<h2 class="mb-4 mt-8 text-xl font-bold">Original Authors</h2>
 				<div class="flex flex-col gap-1">
 					<div class="flex max-w-[14rem] items-center">
 						<div class="indicator">
 							<span class="badge indicator-item badge-primary badge-sm indicator-middle"
-								>author</span>
+								>original author</span>
 							<a href="https://www.github.com/goniszewski" class="px-4 text-center hover:underline">
 								Robert Goniszewski (@goniszewski)
 							</a>
@@ -83,7 +82,6 @@ import { page } from '$app/stores';
 								</div>
 							</div>
 						{/each}
-						<!-- {#if $page.data.contributors.length ===10} -->
 						<div class="flex items-center justify-center">
 							<div class="tooltip" data-tip="Thank you for your contribution!">
 								<a
@@ -93,12 +91,11 @@ import { page } from '$app/stores';
 								</a>
 							</div>
 						</div>
-						<!-- {/if} -->
 					{/if}
 				</div>
 			</div>
 			<div class="mt-8 flex flex-col items-center">
-				<h2 class="mb-4 mt-8 text-xl font-bold">Special thanks to</h2>
+				<h2 class="mb-4 mt-8 text-xl font-bold">Built with amazing tools</h2>
 				<p class="flex flex-col items-center gap-1">
 					<a href="https://github.com/extractus/article-extractor" class="hover:underline">
 						@extractus/article-extractor</a>

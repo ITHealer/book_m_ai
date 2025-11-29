@@ -1,14 +1,19 @@
 services:
-  grimoire:
-    image: goniszewski/grimoire:latest
-    container_name: grimoire
+  healer:
+    # Note: Update this image name when you build your own Docker image
+    # Original image: goniszewski/grimoire:latest
+    image: healer:latest
+    container_name: healer
     restart: unless-stopped
     environment:
       - PORT=5173
       - PUBLIC_HTTPS_ONLY=false
       - PUBLIC_SIGNUP_DISABLED=false
+      # Optional: Configure AI service connection
+      # - HEALER_AI_BASE_URL=http://localhost:8000
+      # - HEALER_AI_API_KEY=your-secret-key
     volumes:
-      - grimoire_data:/app/data/
+      - healer_data:/app/data/
     build:
       context: .
       dockerfile: Dockerfile
@@ -20,4 +25,4 @@ services:
     ports:
       - '${PORT:-5173}:${PORT:-5173}'
 volumes:
-  grimoire_data:
+  healer_data:
