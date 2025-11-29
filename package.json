@@ -73,6 +73,7 @@
 	"dependencies": {
 		"@extractus/article-extractor": "^8.0.10",
 		"@lucia-auth/adapter-drizzle": "^1.1.0",
+		"@node-rs/argon2": "^2.0.2",
 		"@sveltejs/vite-plugin-svelte": "^3.1.2",
 		"@tabler/icons": "^3.16.0",
 		"@tabler/icons-svelte": "^3.16.0",
