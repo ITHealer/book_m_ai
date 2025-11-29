@@ -53,13 +53,16 @@ export function getAIClient(): IAIClient {
 		const config = getAIConfig();
 		const useMock = shouldUseMock();
 
-		if (useMock) {
-			console.log('[Healer AI] Using MockAIClient (development mode)');
-			clientInstance = new MockAIClient(config);
-		} else {
-			console.log('[Healer AI] Using HTTPAIClient connected to:', config.baseUrl);
-			clientInstance = new HTTPAIClient(config);
+		// Only log in browser environment to avoid SSR warnings
+		if (typeof window !== 'undefined') {
+			if (useMock) {
+				console.log('[Healer AI] Using MockAIClient (development mode)');
+			} else {
+				console.log('[Healer AI] Using HTTPAIClient connected to:', config.baseUrl);
+			}
 		}
+
+		clientInstance = useMock ? new MockAIClient(config) : new HTTPAIClient(config);
 	}
 
 	return clientInstance;
