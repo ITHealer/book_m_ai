@@ -1,0 +1,13 @@
+{
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"eslint.validate": ["javascript", "typescript", "svelte"],
+	"editor.formatOnSave": true,
+	"importSorter.generalConfiguration.sortOnBeforeSave": true,
+	"svelte.plugin.svelte.format.enable": true,
+	"[svelte]": {
+		"editor.defaultFormatter": "svelte.svelte-vscode"
+	},
+	"npm.packageManager": "bun"
+}
