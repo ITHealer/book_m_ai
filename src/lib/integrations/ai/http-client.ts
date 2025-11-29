@@ -16,6 +16,8 @@ import type {
 	SummarizeResponse,
 	GenerateTagsRequest,
 	GenerateTagsResponse,
+	GenerateEmbeddingsRequest,
+	GenerateEmbeddingsResponse,
 	AIClientConfig,
 	AIServiceErrorResponse
 } from './types';
@@ -63,6 +65,16 @@ export class HTTPAIClient implements IAIClient {
 		};
 
 		return this.makeRequest<GenerateTagsResponse>(endpoint, body);
+	}
+
+	async generateEmbeddings(request: GenerateEmbeddingsRequest): Promise<GenerateEmbeddingsResponse> {
+		const endpoint = '/v1/embed';
+		const body = {
+			text: request.text,
+			model: request.model
+		};
+
+		return this.makeRequest<GenerateEmbeddingsResponse>(endpoint, body);
 	}
 
 	async healthCheck(): Promise<boolean> {

@@ -28,6 +28,13 @@ export interface GenerateTagsRequest {
 	count?: number;
 }
 
+export interface GenerateEmbeddingsRequest {
+	/** Text to generate embeddings for */
+	text: string;
+	/** Optional model override */
+	model?: string;
+}
+
 // ============================================================================
 // Response Types
 // ============================================================================
@@ -52,6 +59,19 @@ export interface GenerateTagsResponse {
 		tokensUsed?: number;
 		processingTimeMs?: number;
 	};
+}
+
+export interface GenerateEmbeddingsResponse {
+	/** Vector embedding (array of floats) */
+	embedding: number[];
+	/** Model used */
+	model: string;
+	/** Embedding vector dimensions */
+	dimensions: number;
+	/** Tokens consumed */
+	tokens_used?: number;
+	/** Processing time in milliseconds */
+	processing_time_ms?: number;
 }
 
 // ============================================================================
@@ -122,6 +142,14 @@ export interface IAIClient {
 	 * @throws AIServiceError on failure
 	 */
 	generateTags(request: GenerateTagsRequest): Promise<GenerateTagsResponse>;
+
+	/**
+	 * Generate embeddings for text using AI
+	 * @param request Embeddings generation request
+	 * @returns Promise resolving to embeddings response
+	 * @throws AIServiceError on failure
+	 */
+	generateEmbeddings(request: GenerateEmbeddingsRequest): Promise<GenerateEmbeddingsResponse>;
 
 	/**
 	 * Check if AI service is available and healthy

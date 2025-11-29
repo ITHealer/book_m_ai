@@ -16,6 +16,8 @@ import type {
 	SummarizeResponse,
 	GenerateTagsRequest,
 	GenerateTagsResponse,
+	GenerateEmbeddingsRequest,
+	GenerateEmbeddingsResponse,
 	AIClientConfig
 } from './types';
 
@@ -86,6 +88,36 @@ export class MockAIClient implements IAIClient {
 
 		if (this.config.debug) {
 			console.log('[MockAIClient] generateTags() response:', response);
+		}
+
+		return response;
+	}
+
+	async generateEmbeddings(request: GenerateEmbeddingsRequest): Promise<GenerateEmbeddingsResponse> {
+		if (this.config.debug) {
+			console.log('[MockAIClient] generateEmbeddings() called with:', request);
+		}
+
+		// Simulate API delay
+		await this.simulateDelay(200, 500);
+
+		// Generate mock embedding (1536 dimensions like text-embedding-3-small)
+		const dimensions = 1536;
+		const mockEmbedding = Array.from({ length: dimensions }, () => (Math.random() - 0.5) * 2);
+
+		const response: GenerateEmbeddingsResponse = {
+			embedding: mockEmbedding,
+			model: request.model || 'text-embedding-3-small',
+			dimensions,
+			tokens_used: Math.ceil(request.text.length / 4),
+			processing_time_ms: Math.floor(Math.random() * 300) + 200
+		};
+
+		if (this.config.debug) {
+			console.log('[MockAIClient] generateEmbeddings() response:', {
+				...response,
+				embedding: `[${dimensions} dimensions]`
+			});
 		}
 
 		return response;

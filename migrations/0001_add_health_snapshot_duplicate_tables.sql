@@ -76,3 +76,20 @@ CREATE INDEX `health_check_logt_checked_index` ON `health_check_log` (`checked`)
 CREATE INDEX `bookmarkt_status_index` ON `bookmark` (`status`);
 --> statement-breakpoint
 CREATE INDEX `bookmarkt_duplicate_group_index` ON `bookmark` (`duplicate_group_id`);
+--> statement-breakpoint
+
+-- Create bookmark_embedding table
+CREATE TABLE `bookmark_embedding` (
+	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+	`bookmark_id` integer NOT NULL UNIQUE,
+	`embedding` text NOT NULL,
+	`model` text NOT NULL,
+	`dimensions` integer NOT NULL,
+	`created` integer DEFAULT (unixepoch()) NOT NULL,
+	`updated` integer DEFAULT (unixepoch()) NOT NULL,
+	FOREIGN KEY (`bookmark_id`) REFERENCES `bookmark`(`id`) ON UPDATE no action ON DELETE cascade
+);
+--> statement-breakpoint
+
+-- Create indexes for bookmark_embedding
+CREATE INDEX `bookmark_embeddingt_bookmark_id_index` ON `bookmark_embedding` (`bookmark_id`);

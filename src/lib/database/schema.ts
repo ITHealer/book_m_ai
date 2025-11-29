@@ -197,6 +197,30 @@ export const healthCheckLogSchema = sqliteTable(
 	})
 );
 
+export const bookmarkEmbeddingSchema = sqliteTable(
+	'bookmark_embedding',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		bookmarkId: integer('bookmark_id')
+			.notNull()
+			.unique()
+			.references(() => bookmarkSchema.id, { onDelete: 'cascade' }),
+		embedding: text('embedding', { mode: 'json' }).notNull().$type<number[]>(), // Vector as JSON array
+		model: text('model').notNull(), // Model used (e.g., text-embedding-3-small)
+		dimensions: integer('dimensions').notNull(), // Vector dimensions (e.g., 1536)
+		created: integer('created', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		updated: integer('updated', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+			.$onUpdate(() => sql`(unixepoch())`)
+	},
+	(table) => ({
+		bookmarkIdIdx: index('bookmark_embeddingt_bookmark_id_index').on(table.bookmarkId)
+	})
+);
+
 export const bookmarkSchema = sqliteTable(
 	'bookmark',
 	{
@@ -322,7 +346,11 @@ export const bookmarksRelations = relations(bookmarkSchema, ({ many, one }) => (
 	}),
 	tags: many(bookmarksToTagsSchema),
 	snapshots: many(snapshotSchema),
-	healthCheckLogs: many(healthCheckLogSchema)
+	healthCheckLogs: many(healthCheckLogSchema),
+	embedding: one(bookmarkEmbeddingSchema, {
+		fields: [bookmarkSchema.id],
+		references: [bookmarkEmbeddingSchema.bookmarkId]
+	})
 }));
 
 export const tagRelations = relations(tagSchema, ({ many, one }) => ({
@@ -437,6 +465,13 @@ export const snapshotRelationsSchema = relations(snapshotSchema, ({ one }) => ({
 export const healthCheckLogRelationsSchema = relations(healthCheckLogSchema, ({ one }) => ({
 	bookmark: one(bookmarkSchema, {
 		fields: [healthCheckLogSchema.bookmarkId],
+		references: [bookmarkSchema.id]
+	})
+}));
+
+export const bookmarkEmbeddingRelationsSchema = relations(bookmarkEmbeddingSchema, ({ one }) => ({
+	bookmark: one(bookmarkSchema, {
+		fields: [bookmarkEmbeddingSchema.bookmarkId],
 		references: [bookmarkSchema.id]
 	})
 }));
