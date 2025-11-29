@@ -1,11 +1,15 @@
 import { getUserById } from '$lib/database/repositories/User.repository';
 import { themes } from '$lib/enums/themes';
 import { lucia, validateRequest } from '$lib/server/auth';
+import { initializeWorkers } from '$lib/server/workers/init';
 
 import type { Theme } from '$lib/enums/themes';
 import type { User } from '$lib/types/User.type';
 import type { Session, User as LuciaUser } from 'lucia';
 import type { Cookies, Handle } from '@sveltejs/kit';
+
+// Initialize background workers on server start
+initializeWorkers();
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const { session, user } = await validateRequest(event);

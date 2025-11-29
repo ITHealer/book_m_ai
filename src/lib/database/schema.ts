@@ -118,6 +118,85 @@ export const tagSchema = sqliteTable(
 	})
 );
 
+export const duplicateGroupSchema = sqliteTable(
+	'duplicate_group',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		masterBookmarkId: integer('master_bookmark_id').references(
+			(): AnySQLiteColumn => bookmarkSchema.id,
+			{ onDelete: 'set null' }
+		),
+		reason: text('reason').notNull(), // 'same_url', 'same_domain', 'similar_content'
+		similarity: integer('similarity'), // 0-100 for similar_content
+		ownerId: integer('owner_id')
+			.notNull()
+			.references(() => userSchema.id, { onDelete: 'cascade' }),
+		created: integer('created', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		updated: integer('updated', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+			.$onUpdate(() => sql`(unixepoch())`)
+	},
+	(table) => ({
+		ownerIdIdx: index('duplicate_groupt_owner_id_index').on(table.ownerId)
+	})
+);
+
+export const snapshotSchema = sqliteTable(
+	'snapshot',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		bookmarkId: integer('bookmark_id')
+			.notNull()
+			.references(() => bookmarkSchema.id, { onDelete: 'cascade' }),
+		level: text('level', { enum: ['L1', 'L2', 'L3'] }).notNull(),
+		// L1: text only
+		textContent: text('text_content'),
+		// L2: HTML + images
+		htmlContent: text('html_content'),
+		imageFileIds: text('image_file_ids', { mode: 'json' }).$type<number[]>(), // Array of file IDs
+		// L3: full archive
+		archiveFileId: integer('archive_file_id').references(() => fileSchema.id),
+		// Metadata
+		size: integer('size'), // bytes
+		contentHash: text('content_hash'), // SHA-256 for deduplication
+		created: integer('created', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`),
+		updated: integer('updated', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+			.$onUpdate(() => sql`(unixepoch())`)
+	},
+	(table) => ({
+		bookmarkIdIdx: index('snapshott_bookmark_id_index').on(table.bookmarkId),
+		levelIdx: index('snapshott_level_index').on(table.level)
+	})
+);
+
+export const healthCheckLogSchema = sqliteTable(
+	'health_check_log',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		bookmarkId: integer('bookmark_id')
+			.notNull()
+			.references(() => bookmarkSchema.id, { onDelete: 'cascade' }),
+		status: text('status', { enum: ['online', 'offline', 'error'] }).notNull(),
+		statusCode: integer('status_code'), // HTTP status code
+		responseTime: integer('response_time'), // milliseconds
+		errorMessage: text('error_message'),
+		checked: integer('checked', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(table) => ({
+		bookmarkIdIdx: index('health_check_logt_bookmark_id_index').on(table.bookmarkId),
+		checkedIdx: index('health_check_logt_checked_index').on(table.checked)
+	})
+);
+
 export const bookmarkSchema = sqliteTable(
 	'bookmark',
 	{
@@ -141,6 +220,18 @@ export const bookmarkSchema = sqliteTable(
 		flagged: integer('flagged', { mode: 'timestamp' }),
 		read: integer('read', { mode: 'timestamp' }),
 		archived: integer('archived', { mode: 'timestamp' }),
+		// Health check & snapshot fields
+		status: text('status', { enum: ['online', 'offline', 'error', 'pending'] })
+			.default('pending')
+			.notNull(),
+		snapshotLevel: text('snapshot_level', { enum: ['none', 'L1', 'L2', 'L3'] })
+			.default('none')
+			.notNull(),
+		refreshedAt: integer('refreshed_at', { mode: 'timestamp' }),
+		duplicateGroupId: integer('duplicate_group_id').references(
+			(): AnySQLiteColumn => duplicateGroupSchema.id,
+			{ onDelete: 'set null' }
+		),
 		ownerId: integer('owner_id')
 			.notNull()
 			.references(() => userSchema.id, { onDelete: 'cascade' }),
@@ -161,7 +252,9 @@ export const bookmarkSchema = sqliteTable(
 		urlOwnerIdx: index('bookmarkt_url_owner_index').on(table.url, table.ownerId),
 		titleOwnerIdx: index('bookmarkt_title_owner_index').on(table.title, table.ownerId),
 		domainOwnerIdx: index('bookmarkt_domain_owner_index').on(table.domain, table.ownerId),
-		createdOwnerIdx: index('bookmarkt_created_owner_index').on(table.created, table.ownerId)
+		createdOwnerIdx: index('bookmarkt_created_owner_index').on(table.created, table.ownerId),
+		statusIdx: index('bookmarkt_status_index').on(table.status),
+		duplicateGroupIdx: index('bookmarkt_duplicate_group_index').on(table.duplicateGroupId)
 	})
 );
 
@@ -222,7 +315,14 @@ export const bookmarksRelations = relations(bookmarkSchema, ({ many, one }) => (
 		references: [userSchema.id],
 		relationName: 'userBookmarks'
 	}),
-	tags: many(bookmarksToTagsSchema)
+	duplicateGroup: one(duplicateGroupSchema, {
+		fields: [bookmarkSchema.duplicateGroupId],
+		references: [duplicateGroupSchema.id],
+		relationName: 'duplicateGroupBookmarks'
+	}),
+	tags: many(bookmarksToTagsSchema),
+	snapshots: many(snapshotSchema),
+	healthCheckLogs: many(healthCheckLogSchema)
 }));
 
 export const tagRelations = relations(tagSchema, ({ many, one }) => ({
@@ -275,6 +375,9 @@ export const userRelationsSchema = relations(userSchema, ({ many }) => ({
 	files: many(fileSchema, { relationName: 'userFiles' }),
 	sessions: many(sessionSchema, {
 		relationName: 'userSessions'
+	}),
+	duplicateGroups: many(duplicateGroupSchema, {
+		relationName: 'userDuplicateGroups'
 	})
 }));
 
@@ -302,5 +405,38 @@ export const sessionRelationsSchema = relations(sessionSchema, ({ one }) => ({
 		fields: [sessionSchema.userId],
 		references: [userSchema.id],
 		relationName: 'userSessions'
+	})
+}));
+
+export const duplicateGroupRelationsSchema = relations(duplicateGroupSchema, ({ many, one }) => ({
+	masterBookmark: one(bookmarkSchema, {
+		fields: [duplicateGroupSchema.masterBookmarkId],
+		references: [bookmarkSchema.id]
+	}),
+	owner: one(userSchema, {
+		fields: [duplicateGroupSchema.ownerId],
+		references: [userSchema.id],
+		relationName: 'userDuplicateGroups'
+	}),
+	bookmarks: many(bookmarkSchema, {
+		relationName: 'duplicateGroupBookmarks'
+	})
+}));
+
+export const snapshotRelationsSchema = relations(snapshotSchema, ({ one }) => ({
+	bookmark: one(bookmarkSchema, {
+		fields: [snapshotSchema.bookmarkId],
+		references: [bookmarkSchema.id]
+	}),
+	archiveFile: one(fileSchema, {
+		fields: [snapshotSchema.archiveFileId],
+		references: [fileSchema.id]
+	})
+}));
+
+export const healthCheckLogRelationsSchema = relations(healthCheckLogSchema, ({ one }) => ({
+	bookmark: one(bookmarkSchema, {
+		fields: [healthCheckLogSchema.bookmarkId],
+		references: [bookmarkSchema.id]
 	})
 }));

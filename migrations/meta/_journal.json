@@ -8,6 +8,13 @@
       "when": 1726497020846,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1732874280000,
+      "tag": "0001_add_health_snapshot_duplicate_tables",
+      "breakpoints": true
     }
   ]
 }
