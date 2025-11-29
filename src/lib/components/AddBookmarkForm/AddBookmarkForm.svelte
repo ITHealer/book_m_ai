@@ -145,7 +145,15 @@ const onGetMetadata = debounce(
 		})
 			.then((res) => res.json())
 			.then((data) => {
-				metadata = data?.metadata || { ...defaultFormValues };
+				// Preserve URL and merge with fetched metadata
+				const fetchedMetadata = data?.metadata || {};
+				metadata = {
+					...defaultFormValues,
+					...fetchedMetadata,
+					url: url, // Always keep the URL
+					// Use URL as fallback title if no title fetched
+					title: fetchedMetadata.title || url
+				};
 
 				// Auto-generate tags if AI is enabled in user settings
 				if (!metadata.contentText || !$userSettingsStore?.ai?.enabled)
@@ -181,6 +189,13 @@ const onGetMetadata = debounce(
 			.catch((err) => {
 				console.error(err);
 				error = 'Failed to fetch metadata';
+
+				// On error, still keep URL and use it as title
+				metadata = {
+					...defaultFormValues,
+					url: url,
+					title: url
+				};
 			})
 			.finally(() => {
 				loading.set(false);
@@ -423,7 +438,7 @@ const onGetMetadata = debounce(
 
 			<button
 				class="btn btn-primary mx-auto my-6 w-full max-w-xs"
-				disabled={$loading || !metadata.url || !metadata.title}>Add</button>
+				disabled={$loading || !metadata.url}>Add</button>
 		</div>
 	</div>
 </form>
