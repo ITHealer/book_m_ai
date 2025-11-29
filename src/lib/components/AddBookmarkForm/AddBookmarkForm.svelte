@@ -155,6 +155,8 @@ const onGetMetadata = debounce(
 					title: fetchedMetadata.title || url
 				};
 
+				console.log('[AddBookmark] Metadata fetched:', metadata);
+
 				// Auto-generate tags if AI is enabled in user settings
 				if (!metadata.contentText || !$userSettingsStore?.ai?.enabled)
 					return;
@@ -187,7 +189,7 @@ const onGetMetadata = debounce(
 					});
 			})
 			.catch((err) => {
-				console.error(err);
+				console.error('[AddBookmark] Fetch metadata error:', err);
 				error = 'Failed to fetch metadata';
 
 				// On error, still keep URL and use it as title
@@ -196,14 +198,16 @@ const onGetMetadata = debounce(
 					url: url,
 					title: url
 				};
+
+				console.log('[AddBookmark] Metadata set to fallback:', metadata);
 			})
 			.finally(() => {
 				loading.set(false);
 			});
 	},
-	1000,
+	500,  // Reduced from 1000ms to 500ms for better UX
 	{
-		signal: AbortSignal.timeout(5000),
+		signal: AbortSignal.timeout(10000),  // Increased to 10s
 		edges: ['trailing']
 	}
 );
