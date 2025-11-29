@@ -33,7 +33,7 @@ const sortByOptions = [
 	{ label: 'opened times (asc)', value: 'opened_times_asc' }
 ];
 
-$searchEngine = initializeSearch($page.data.bookmarksForIndex);
+$: $searchEngine = initializeSearch($page.data.bookmarksForIndex);
 
 function filterBookmarks(bookmarks: Bookmark[], settings: UserSettings) {
 	return bookmarks.filter((b) => {
@@ -172,16 +172,16 @@ let bookmarksViewForm: HTMLFormElement;
 		position="right" />
 {:else if $page.data.noUsersFound}
 	<div class="flex h-full flex-col items-center justify-center">
-		<h1 class="text-2xl">Initialization Wizard 🧙</h1>
+		<h1 class="text-2xl">Initialization Wizard 🔮</h1>
 		<div class="my-4 flex max-w-2xl flex-col gap-4 text-center">
 			<p class="text-lg">
-				Looks like you're about to start using Grimoire for <span class="text-primary"
+				Looks like you're about to start using Healer for <span class="text-primary"
 					>the first time!</span>
 			</p>
 			{#if env?.PUBLIC_SIGNUP_DISABLED === 'true'}
 				<p class="text-lg">
 					Please enable public signup in your <code>.env</code> file and
-					<strong><a href="/signup" class="link">create your first User</a></strong> to start using Grimoire.
+					<strong><a href="/signup" class="link">create your first User</a></strong> to start using Healer.
 				</p>
 			{:else}
 				<p class="text-lg">
@@ -200,7 +200,7 @@ let bookmarksViewForm: HTMLFormElement;
 	</div>
 {:else}
 	<div class="flex h-full flex-col items-center justify-center">
-		<h1 class="text-2xl">Grimoire welcomes!</h1>
+		<h1 class="text-2xl">Healer welcomes!</h1>
 		<p class="text-lg">
 			Please <a href="/login" class="link">login</a> or
 			<a href="/signup" class="link">signup</a>

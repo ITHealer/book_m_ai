@@ -3,11 +3,9 @@ import { enhance } from '$app/forms';
 import { invalidate } from '$app/navigation';
 import { page } from '$app/stores';
 import { aiClient } from '$lib/integrations/ai';
-import { searchEngine } from '$lib/stores/search.store';
 import { userSettingsStore } from '$lib/stores/user-settings.store';
 import type { Metadata } from '$lib/types/Metadata.type';
 import { validateUrlRegex } from '$lib/utils/regex-library';
-import { addBookmarkToSearchIndex } from '$lib/utils/search';
 import { showToast } from '$lib/utils/show-toast';
 
 import { IconInfoCircle } from '@tabler/icons-svelte';
@@ -223,9 +221,6 @@ const onGetMetadata = debounce(
 		return async ({ update, result }) => {
 			await invalidate('app:main-page');
 			if (result.type === 'success' && result?.data?.bookmark) {
-				// @ts-ignore-next-line
-				addBookmarkToSearchIndex($searchEngine, result.data.bookmark);
-
 				metadata = { ...defaultFormValues };
 				bookmarkTagsInput.set(null);
 
