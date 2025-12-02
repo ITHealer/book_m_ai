@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Healer - Save Bookmark</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <h1>🔖 Healer</h1>
+      <p class="subtitle">Save & organize your bookmarks</p>
+    </header>
+
+    <!-- Connection Status -->
+    <div id="connectionStatus" class="status hidden">
+      <span id="statusIcon">●</span>
+      <span id="statusText">Checking connection...</span>
+    </div>
+
+    <!-- Login Section (shown when not authenticated) -->
+    <div id="loginSection" class="section hidden">
+      <h2>Login Required</h2>
+      <p>Please login to your Healer instance to save bookmarks.</p>
+      <input type="text" id="apiUrl" placeholder="Healer URL (e.g., http://localhost:5173)" />
+      <button id="openHealer" class="btn btn-primary">Open Healer</button>
+    </div>
+
+    <!-- Save Form (shown when authenticated) -->
+    <div id="saveForm" class="section">
+      <form id="bookmarkForm">
+        <div class="form-group">
+          <label for="url">URL</label>
+          <input type="url" id="url" name="url" required readonly />
+        </div>
+
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" required />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Tags (comma separated)</label>
+          <input type="text" id="tags" name="tags" placeholder="javascript, tutorial, react" />
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="saveBtn">
+            Save Bookmark
+          </button>
+          <button type="button" class="btn btn-secondary" id="openInHealer">
+            Open in Healer
+          </button>
+        </div>
+      </form>
+
+      <!-- Success/Error Message -->
+      <div id="message" class="message hidden"></div>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings">
+      <button id="settingsToggle" class="btn-link">⚙️ Settings</button>
+      <div id="settingsPanel" class="settings-panel hidden">
+        <div class="form-group">
+          <label for="settingsApiUrl">Healer API URL</label>
+          <input type="url" id="settingsApiUrl" placeholder="http://localhost:5173" />
+        </div>
+        <button id="saveSettings" class="btn btn-small">Save Settings</button>
+        <button id="testConnection" class="btn btn-small">Test Connection</button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>
+        <a href="https://github.com/yourusername/healer" target="_blank">GitHub</a> |
+        <a href="#" id="clearData">Clear Data</a>
+      </p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

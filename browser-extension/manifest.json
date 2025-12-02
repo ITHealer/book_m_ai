@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "Healer - Bookmark Manager",
+  "version": "1.0.0",
+  "description": "Save and manage your bookmarks with Healer. Quick save, tag, and organize your favorite links.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost/*",
+    "https://*/*"
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+B",
+        "mac": "Command+Shift+B"
+      },
+      "description": "Open Healer popup"
+    },
+    "save-bookmark": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+D",
+        "mac": "Command+Shift+D"
+      },
+      "description": "Quick save current page"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "healer@example.com",
+      "strict_min_version": "109.0"
+    }
+  }
+}
