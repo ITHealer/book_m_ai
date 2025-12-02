@@ -48,7 +48,7 @@ export class EmbeddingService {
 
 		try {
 			// Call AI service to generate embedding
-			const result = await aiClient.generateEmbeddings(text);
+			const result = await aiClient.generateEmbeddings({ text });
 
 			// Check if embedding already exists
 			const existing = await this.dbClient.query.bookmarkEmbeddingSchema.findFirst({
@@ -235,7 +235,7 @@ export class SemanticSearchService {
 	 */
 	private async generateQueryEmbedding(query: string): Promise<number[]> {
 		try {
-			const result = await aiClient.generateEmbeddings(query);
+			const result = await aiClient.generateEmbeddings({ text: query });
 			return result.embedding;
 		} catch (error) {
 			console.error('Failed to generate query embedding:', error);
