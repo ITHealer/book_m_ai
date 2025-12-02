@@ -266,10 +266,15 @@ function onShowBookmark() {
 						</div>
 					</div>
 				</div>
-				<div class="tooltip text-left" data-tip={bookmark.description}>
+				<div class="tooltip text-left" data-tip={bookmark.description || bookmark.summary}>
 					{#if bookmark.description}
 						<p class="line-clamp-2 text-sm font-light opacity-90">
 							{bookmark.description}
+						</p>
+					{:else if bookmark.summary}
+						<p class="line-clamp-2 text-sm font-light opacity-90">
+							<span class="badge badge-ghost badge-sm mr-1">🤖 AI</span>
+							{bookmark.summary}
 						</p>
 					{:else}
 						<p class="text-sm font-light italic opacity-80">No description...</p>

@@ -3,6 +3,7 @@ export type Metadata = {
 	domain: string;
 	title: string;
 	description: string | null;
+	summary: string | null; // AI-generated summary
 	author: string | null;
 	contentText: string | null;
 	contentHtml: string | null;

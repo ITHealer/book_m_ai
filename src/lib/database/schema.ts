@@ -229,6 +229,7 @@ export const bookmarkSchema = sqliteTable(
 		domain: text('domain').notNull(),
 		title: text('title').notNull(),
 		description: text('description'),
+		summary: text('summary'), // AI-generated summary
 		author: text('author'),
 		contentText: text('content_text'),
 		contentHtml: text('content_html'),

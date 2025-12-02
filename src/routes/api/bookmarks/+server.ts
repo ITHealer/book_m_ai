@@ -8,6 +8,8 @@ import { Storage } from '$lib/storage/storage';
 import { getMetadata } from '$lib/utils/get-metadata';
 import { initializeSearch, searchIndexKeys } from '$lib/utils/search';
 import { urlDataToBlobConverter } from '$lib/utils/url-data-to-blob-converter';
+import { aiClient } from '$lib/integrations/ai';
+import { embeddingService } from '$lib/server/semantic-search.service';
 import joi from 'joi';
 
 import { json } from '@sveltejs/kit';
@@ -228,6 +230,71 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			});
 
 			await setScreenshotToBookmark(bookmark.id, ownerId, addedScreenshot.id);
+		}
+
+		// 🤖 AI Processing: Generate summary, tags, and embeddings
+		try {
+			const contentForAI = [
+				bookmarkData.title,
+				bookmarkData.description,
+				bookmarkData.contentText ? bookmarkData.contentText.substring(0, 2000) : ''
+			]
+				.filter(Boolean)
+				.join(' ');
+
+			let aiSummary: string | null = null;
+			let aiTags: string[] = [];
+
+			// Generate summary if no description provided
+			if (contentForAI && !bookmarkData.description) {
+				try {
+					const summaryResult = await aiClient.summarize({
+						content: contentForAI,
+						maxLength: 200
+					});
+					aiSummary = summaryResult.summary;
+					console.log(`✅ Generated AI summary for bookmark ${bookmark.id}`);
+				} catch (error) {
+					console.error('Failed to generate AI summary:', error);
+				}
+			}
+
+			// Generate tags if none provided
+			if (contentForAI && tags.length === 0) {
+				try {
+					const tagsResult = await aiClient.generateTags({
+						content: contentForAI,
+						count: 5
+					});
+					aiTags = tagsResult.tags;
+					console.log(`✅ Generated ${aiTags.length} AI tags for bookmark ${bookmark.id}`);
+
+					// Add AI-generated tags to bookmark
+					if (aiTags.length > 0) {
+						await upsertTagsForBookmark(bookmark.id, ownerId, aiTags);
+					}
+				} catch (error) {
+					console.error('Failed to generate AI tags:', error);
+				}
+			}
+
+			// Generate embedding immediately
+			if (contentForAI) {
+				try {
+					await embeddingService.generateEmbedding(bookmark.id);
+					console.log(`✅ Generated embedding for bookmark ${bookmark.id}`);
+				} catch (error) {
+					console.error('Failed to generate embedding:', error);
+				}
+			}
+
+			// Update bookmark with AI summary if generated
+			if (aiSummary) {
+				await updateBookmark(bookmark.id, ownerId, { summary: aiSummary });
+			}
+		} catch (aiError) {
+			// Don't fail the request if AI processing fails
+			console.error('AI processing error:', aiError);
 		}
 
 		return json({ bookmark }, { status: 201 });

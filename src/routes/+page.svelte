@@ -51,12 +51,41 @@ const bookmarksToDisplay = writable<Bookmark[]>($page.data.bookmarks);
 
 $: {
 	if ($searchedValue.trim()) {
-		const searchedBookmarksIds = $searchEngine.search($searchedValue).map((b) => b.item.id);
 		throttle(() => {
-			fetch(`/api/bookmarks?ids=${searchedBookmarksIds.join(',')}`)
+			// 🔍 Use AI semantic search for better results
+			fetch('/api/search/semantic', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					query: $searchedValue,
+					limit: 50,
+					threshold: 0.3
+				})
+			})
 				.then((r) => r.json())
-				.then((r) => {
-					$bookmarksToDisplay = r.bookmarks;
+				.then((data) => {
+					if (data.success && data.results) {
+						$bookmarksToDisplay = data.results.map((r: any) => r.bookmark);
+					} else {
+						// Fallback to fuzzy search if semantic search fails
+						const searchedBookmarksIds = $searchEngine.search($searchedValue).map((b) => b.item.id);
+						fetch(`/api/bookmarks?ids=${searchedBookmarksIds.join(',')}`)
+							.then((r) => r.json())
+							.then((r) => {
+								$bookmarksToDisplay = r.bookmarks;
+							});
+					}
+				})
+				.catch(() => {
+					// Fallback to fuzzy search on error
+					const searchedBookmarksIds = $searchEngine.search($searchedValue).map((b) => b.item.id);
+					fetch(`/api/bookmarks?ids=${searchedBookmarksIds.join(',')}`)
+						.then((r) => r.json())
+						.then((r) => {
+							$bookmarksToDisplay = r.bookmarks;
+						});
 				});
 		}, 250)();
 	} else {
