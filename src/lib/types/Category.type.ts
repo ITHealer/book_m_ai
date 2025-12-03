@@ -10,9 +10,11 @@ export type Category = {
 	ownerId: number;
 	owner?: User;
 	parent?: Category | null;
+	parentId?: number | null;
 	archived: Date | null;
 	public: Date | null;
 	initial: boolean;
 	created: Date;
 	updated: Date;
+	bookmarksCount?: number; // Number of bookmarks in this category
 };

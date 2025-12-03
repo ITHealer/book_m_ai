@@ -1,7 +1,6 @@
 <script lang="ts">
 import AddBookmarkButton from '$lib/components/AddBookmarkButton/AddBookmarkButton.svelte';
 import BookmarkList from '$lib/components/BookmarksList/BookmarkList.svelte';
-import SmartBookmarksView from '$lib/components/SmartBookmarksView/SmartBookmarksView.svelte';
 
 import { applyAction, enhance } from '$app/forms';
 import { page } from '$app/stores';
@@ -19,15 +18,11 @@ import {
 	IconLayout2,
 	IconListDetails,
 	IconSortAscending,
-	IconSortDescending,
-	IconSparkles
+	IconSortDescending
 } from '@tabler/icons-svelte';
 import { throttle } from 'es-toolkit';
 import Select from 'svelte-select';
 import { writable } from 'svelte/store';
-
-// Smart Bookmarks UI toggle (can be saved to user settings later)
-let useSmartView = false;
 
 const sortByOptions = [
 	{ label: 'added (desc)', value: 'created_desc' },
@@ -106,129 +101,104 @@ let bookmarksViewForm: HTMLFormElement;
 </script>
 
 {#if $page.data.user?.id}
-	<!-- Smart View Toggle Button -->
-	<div class="fixed bottom-6 right-6 z-50">
-		<div class="tooltip tooltip-left" data-tip={useSmartView ? 'Switch to Classic View' : 'Switch to Smart View (NEW!)'}>
-			<button
-				on:click={() => useSmartView = !useSmartView}
-				class="btn btn-primary btn-lg btn-circle shadow-2xl hover:scale-110 transition-transform">
-				{#if useSmartView}
-					<IconListDetails size={28} />
-				{:else}
-					<IconSparkles size={28} class="animate-pulse" />
-				{/if}
-			</button>
-		</div>
-	</div>
+	<div class="m-4 ml-auto flex w-full flex-col justify-center sm:flex-row">
+		<form
+			class="flex w-full flex-1 flex-wrap items-center pr-5"
+			bind:this={bookmarksViewForm}
+			method="POST"
+			action="/settings/?/updateUserSettings"
+			use:enhance={({ formData }) => {
+				$userSettingsStore = {
+					...($page.data.user?.settings || defaultUserSettings),
+					bookmarksView: formData.get('bookmarksView') === 'on' ? 'list' : 'grid',
+					// @ts-ignore
+					bookmarksSortedBy: JSON.parse(formData.get('bookmarksSortedBy') || '{}')?.value,
+					bookmarksOnlyShowRead: formData.get('bookmarksOnlyShowRead') === 'on',
+					bookmarksOnlyShowFlagged: formData.get('bookmarksOnlyShowFlagged') === 'on'
+				};
 
-	{#if useSmartView}
-		<!-- NEW: Smart Bookmarks View -->
-		<div class="h-screen overflow-hidden">
-			<SmartBookmarksView
-				bookmarks={$bookmarksStore}
-				categories={$page.data.categories || []} />
-		</div>
-	{:else}
-		<!-- CLASSIC: Original View -->
-		<div class="m-4 ml-auto flex w-full flex-col justify-center sm:flex-row">
-			<form
-				class="flex w-full flex-1 flex-wrap items-center pr-5"
-				bind:this={bookmarksViewForm}
-				method="POST"
-				action="/settings/?/updateUserSettings"
-				use:enhance={({ formData }) => {
-					$userSettingsStore = {
-						...($page.data.user?.settings || defaultUserSettings),
-						bookmarksView: formData.get('bookmarksView') === 'on' ? 'list' : 'grid',
-						// @ts-ignore
-						bookmarksSortedBy: JSON.parse(formData.get('bookmarksSortedBy') || '{}')?.value,
-						bookmarksOnlyShowRead: formData.get('bookmarksOnlyShowRead') === 'on',
-						bookmarksOnlyShowFlagged: formData.get('bookmarksOnlyShowFlagged') === 'on'
-					};
+				formData.set('settings', JSON.stringify($userSettingsStore));
 
-					formData.set('settings', JSON.stringify($userSettingsStore));
-
-					return async ({ result }) => {
-						if (result.type === 'success') {
-							await applyAction(result);
-						}
-					};
-				}}>
-				<div class="tooltip flex flex-col justify-center" data-tip="Change view">
-					<label class="link swap swap-rotate px-1 hover:text-secondary">
+				return async ({ result }) => {
+					if (result.type === 'success') {
+						await applyAction(result);
+					}
+				};
+			}}>
+			<div class="tooltip flex flex-col justify-center" data-tip="Change view">
+				<label class="link swap swap-rotate px-1 hover:text-secondary">
+					<input
+						type="checkbox"
+						name="bookmarksView"
+						checked={$userSettingsStore.bookmarksView === 'list'}
+						on:change={() => {
+							bookmarksViewForm.requestSubmit();
+						}} />
+					<IconLayout2 class="swap-on h-5 w-5" />
+					<IconListDetails class="swap-off h-5 w-5" />
+				</label>
+			</div>
+			<div class="tooltip" data-tip="Sort items">
+				<Select
+					class="this-select select min-w-fit "
+					placeholder="Sort by"
+					searchable={false}
+					clearable={false}
+					items={sortByOptions}
+					name="bookmarksSortedBy"
+					value={sortByOptions.find((o) => o.value === $userSettingsStore.bookmarksSortedBy)}
+					on:change={() => {
+						bookmarksViewForm.requestSubmit();
+					}}>
+					<div slot="prepend">
+						{#if $userSettingsStore.bookmarksSortedBy.includes('_asc')}
+							<IconSortAscending class="h-5 w-5" />
+						{:else}
+							<IconSortDescending class="h-5 w-5" />
+						{/if}
+					</div>
+				</Select>
+			</div>
+			<div class="flex">
+				<div class="tooltip cursor-pointer" data-tip="Show only unread">
+					<label class="label cursor-pointer gap-2">
+						<span class="label-text hover:text-secondary">Only unread</span>
 						<input
 							type="checkbox"
-							name="bookmarksView"
-							checked={$userSettingsStore.bookmarksView === 'list'}
+							name="bookmarksOnlyShowRead"
+							checked={$userSettingsStore.bookmarksOnlyShowRead}
+							class="checkbox"
 							on:change={() => {
 								bookmarksViewForm.requestSubmit();
 							}} />
-						<IconLayout2 class="swap-on h-5 w-5" />
-						<IconListDetails class="swap-off h-5 w-5" />
 					</label>
 				</div>
-				<div class="tooltip" data-tip="Sort items">
-					<Select
-						class="this-select select min-w-fit "
-						placeholder="Sort by"
-						searchable={false}
-						clearable={false}
-						items={sortByOptions}
-						name="bookmarksSortedBy"
-						value={sortByOptions.find((o) => o.value === $userSettingsStore.bookmarksSortedBy)}
-						on:change={() => {
-							bookmarksViewForm.requestSubmit();
-						}}>
-						<div slot="prepend">
-							{#if $userSettingsStore.bookmarksSortedBy.includes('_asc')}
-								<IconSortAscending class="h-5 w-5" />
-							{:else}
-								<IconSortDescending class="h-5 w-5" />
-							{/if}
-						</div>
-					</Select>
+				<div class="tooltip cursor-pointer" data-tip="Show only flagged">
+					<label class="label cursor-pointer gap-2">
+						<span class="label-text hover:text-secondary">Only flagged</span>
+						<input
+							type="checkbox"
+							name="bookmarksOnlyShowFlagged"
+							checked={$userSettingsStore.bookmarksOnlyShowFlagged}
+							class="checkbox"
+							on:change={() => {
+								bookmarksViewForm.requestSubmit();
+							}} />
+					</label>
 				</div>
-				<div class="flex">
-					<div class="tooltip cursor-pointer" data-tip="Show only unread">
-						<label class="label cursor-pointer gap-2">
-							<span class="label-text hover:text-secondary">Only unread</span>
-							<input
-								type="checkbox"
-								name="bookmarksOnlyShowRead"
-								checked={$userSettingsStore.bookmarksOnlyShowRead}
-								class="checkbox"
-								on:change={() => {
-									bookmarksViewForm.requestSubmit();
-								}} />
-						</label>
-					</div>
-					<div class="tooltip cursor-pointer" data-tip="Show only flagged">
-						<label class="label cursor-pointer gap-2">
-							<span class="label-text hover:text-secondary">Only flagged</span>
-							<input
-								type="checkbox"
-								name="bookmarksOnlyShowFlagged"
-								checked={$userSettingsStore.bookmarksOnlyShowFlagged}
-								class="checkbox"
-								on:change={() => {
-									bookmarksViewForm.requestSubmit();
-								}} />
-						</label>
-					</div>
-				</div>
-				<span class="ml-auto text-sm text-gray-300"
-					>{`Showing ${$bookmarksStore.length} out of ${$page.data.bookmarks.length}`}</span>
-			</form>
-			<AddBookmarkButton />
-		</div>
+			</div>
+			<span class="ml-auto text-sm text-gray-300"
+				>{`Showing ${$bookmarksStore.length} out of ${$page.data.bookmarks.length}`}</span>
+		</form>
+		<AddBookmarkButton />
+	</div>
 
-		<BookmarkList bookmarks={$bookmarksStore} />
-		<Pagination
-			page={$page.data.page}
-			limit={$page.data.limit}
-			items={$page.data.bookmarksCount}
-			position="right" />
-	{/if}
+	<BookmarkList bookmarks={$bookmarksStore} />
+	<Pagination
+		page={$page.data.page}
+		limit={$page.data.limit}
+		items={$page.data.bookmarksCount}
+		position="right" />
 {:else if $page.data.noUsersFound}
 	<div class="flex h-full flex-col items-center justify-center">
 		<h1 class="text-2xl">Initialization Wizard 🔮</h1>

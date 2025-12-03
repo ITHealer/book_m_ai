@@ -151,6 +151,46 @@ function onShowBookmark() {
 			</div>
 		</form>
 
+		<!-- Health Status & Snapshot Badges -->
+		<div class="absolute right-1 bottom-20 flex flex-col gap-1 items-end">
+			{#if bookmark.status}
+				{#if bookmark.status === 'online'}
+					<div class="badge badge-success badge-sm gap-1 font-semibold shadow-md">
+						<span class="h-2 w-2 rounded-full bg-green-200 animate-pulse"></span>
+						Online
+					</div>
+				{:else if bookmark.status === 'offline'}
+					<div class="badge badge-error badge-sm gap-1 font-semibold shadow-md">
+						<span class="h-2 w-2 rounded-full bg-red-200"></span>
+						Offline
+					</div>
+				{:else if bookmark.status === 'error'}
+					<div class="badge badge-warning badge-sm gap-1 font-semibold shadow-md">
+						<span class="h-2 w-2 rounded-full bg-yellow-200"></span>
+						Error
+					</div>
+				{:else if bookmark.status === 'pending'}
+					<div class="badge badge-ghost badge-sm gap-1 opacity-70">
+						<span class="loading loading-spinner loading-xs"></span>
+						Checking...
+					</div>
+				{/if}
+			{/if}
+
+			{#if bookmark.snapshotLevel && bookmark.snapshotLevel !== 'none'}
+				<div class="badge badge-info badge-sm font-mono font-semibold shadow-md" title="Snapshot level: {bookmark.snapshotLevel}">
+					📸 {bookmark.snapshotLevel}
+				</div>
+			{/if}
+
+			<!-- Duplicate Indicator -->
+			{#if bookmark.duplicateGroupId}
+				<div class="badge badge-warning badge-sm font-semibold shadow-md" title="Part of duplicate group">
+					🔄 Duplicate?
+				</div>
+			{/if}
+		</div>
+
 		<div class="absolute bottom-1 right-1 flex scale-90 gap-1">
 			<form
 				bind:this={readForm}
@@ -272,8 +312,8 @@ function onShowBookmark() {
 							{bookmark.description}
 						</p>
 					{:else if bookmark.summary}
-						<p class="line-clamp-2 text-sm font-light opacity-90">
-							<span class="badge badge-ghost badge-sm mr-1">🤖 AI</span>
+						<p class="line-clamp-2 text-sm font-light opacity-90 bg-gradient-to-r from-purple-50 to-transparent p-1 rounded">
+							<span class="badge badge-primary badge-sm mr-1 font-semibold">🤖 AI Summary</span>
 							{bookmark.summary}
 						</p>
 					{:else}
