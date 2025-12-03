@@ -43,7 +43,7 @@ export function getAIConfig(): AIClientConfig {
  * Check if we should use mock AI client
  * Returns true if:
  * - HEALER_AI_USE_MOCK=true explicitly set
- * - OR no AI service URL is configured
+ * - OR no API key is configured (development mode)
  */
 export function shouldUseMock(): boolean {
 	const useMockEnv = getServerEnv('HEALER_AI_USE_MOCK');
@@ -51,7 +51,7 @@ export function shouldUseMock(): boolean {
 		return useMockEnv === 'true';
 	}
 
-	// Default to mock if no base URL configured
-	const baseUrl = getServerEnv('HEALER_AI_BASE_URL') || getServerEnv('PUBLIC_AI_BASE_URL');
-	return !baseUrl || baseUrl === 'http://localhost:8000';
+	// Default to mock if no API key is configured (development/testing mode)
+	const apiKey = getServerEnv('HEALER_AI_API_KEY') || getServerEnv('PUBLIC_AI_API_KEY');
+	return !apiKey || apiKey === '';
 }

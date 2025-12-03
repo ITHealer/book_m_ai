@@ -26,8 +26,8 @@ import { throttle } from 'es-toolkit';
 import Select from 'svelte-select';
 import { writable } from 'svelte/store';
 
-// Smart Bookmarks UI toggle (can be saved to user settings later)
-let useSmartView = false;
+// Always use Smart View (simplified UI)
+let useSmartView = true;
 
 const sortByOptions = [
 	{ label: 'added (desc)', value: 'created_desc' },
@@ -106,21 +106,6 @@ let bookmarksViewForm: HTMLFormElement;
 </script>
 
 {#if $page.data.user?.id}
-	<!-- Smart View Toggle Button -->
-	<div class="fixed bottom-6 right-6 z-50">
-		<div class="tooltip tooltip-left" data-tip={useSmartView ? 'Switch to Classic View' : 'Switch to Smart View (NEW!)'}>
-			<button
-				on:click={() => useSmartView = !useSmartView}
-				class="btn btn-primary btn-lg btn-circle shadow-2xl hover:scale-110 transition-transform">
-				{#if useSmartView}
-					<IconListDetails size={28} />
-				{:else}
-					<IconSparkles size={28} class="animate-pulse" />
-				{/if}
-			</button>
-		</div>
-	</div>
-
 	{#if useSmartView}
 		<!-- NEW: Smart Bookmarks View -->
 		<div class="h-screen overflow-hidden">

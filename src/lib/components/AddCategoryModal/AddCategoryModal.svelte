@@ -11,8 +11,8 @@
 	});
 
 	$: {
-		if ($category?.id) {
-			$modal.showModal();
+		if ($category?.open) {
+			$modal?.showModal();
 		}
 	}
 

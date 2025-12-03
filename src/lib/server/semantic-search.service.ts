@@ -76,7 +76,8 @@ export class EmbeddingService {
 			}
 		} catch (error) {
 			console.error(`Failed to generate embedding for bookmark ${bookmarkId}:`, error);
-			throw error;
+			// Don't throw error - allow app to continue without embeddings
+			// The bookmark will simply not have vector search capability
 		}
 	}
 
@@ -239,7 +240,8 @@ export class SemanticSearchService {
 			return result.embedding;
 		} catch (error) {
 			console.error('Failed to generate query embedding:', error);
-			throw new Error('Failed to generate query embedding');
+			// Return empty embedding to allow fuzzy search fallback
+			throw new Error('Failed to generate query embedding: AI service unavailable');
 		}
 	}
 
