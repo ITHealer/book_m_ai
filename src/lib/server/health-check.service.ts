@@ -69,8 +69,21 @@ export class HealthCheckService {
 
 			statusCode = response.status;
 
+			// Detect proxy/gateway blocking (e.g., Envoy proxy returning 401)
+			const serverHeader = response.headers.get('server')?.toLowerCase();
+			const isProxyBlock = statusCode === 401 && (
+				serverHeader?.includes('envoy') ||
+				serverHeader?.includes('proxy') ||
+				response.headers.has('www-authenticate')
+			);
+
+			if (isProxyBlock) {
+				// Network/proxy restriction - keep status as pending
+				status = 'pending';
+				errorMessage = 'Network restricted (proxy/firewall)';
+			}
 			// Determine status based on HTTP status code
-			if (statusCode >= 200 && statusCode < 300) {
+			else if (statusCode >= 200 && statusCode < 300) {
 				status = 'online';
 			} else if (statusCode >= 300 && statusCode < 400) {
 				status = 'online'; // Redirects are OK

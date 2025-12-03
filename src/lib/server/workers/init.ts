@@ -18,7 +18,12 @@ export function initializeWorkers() {
 	const embeddingInterval = parseInt(process.env.EMBEDDING_INTERVAL_MINUTES || '30');
 
 	// Only start workers if not in development mode or if explicitly enabled
-	const enableWorkers = process.env.ENABLE_WORKERS === 'true' || process.env.NODE_ENV === 'production';
+	const isDev = config.IS_DEV;
+	const enableWorkersEnv = process.env.ENABLE_WORKERS === 'true';
+	const isProduction = process.env.NODE_ENV === 'production';
+	const enableWorkers = enableWorkersEnv || isProduction;
+
+	console.log(`⚙️  Worker config: IS_DEV=${isDev}, ENABLE_WORKERS=${enableWorkersEnv}, NODE_ENV=${process.env.NODE_ENV}`);
 
 	if (enableWorkers) {
 		healthCheckWorker.start(healthCheckInterval);
@@ -32,7 +37,7 @@ export function initializeWorkers() {
 			console.log('⏸️ Embedding worker disabled (HEALER_AI_BASE_URL not set)');
 		}
 	} else {
-		console.log('⏸️ Workers disabled (set ENABLE_WORKERS=true to enable)');
+		console.log(`⏸️ Workers disabled in development (set ENABLE_WORKERS=true to enable)`);
 	}
 }
 
